@@ -1,4 +1,11 @@
 from django.http import JsonResponse
-
+from products.models import Product
 def api_home(request, *args, **kwargs):
-    return JsonResponse({"message":"hello there"})
+    model_data = Product.objects.all().order_by("?").first()
+    data = {}
+    if model_data:
+        data['title'] = model_data.title
+        data['descibe'] = model_data.describ
+        data['price'] = model_data.price
+
+    return JsonResponse(data)
