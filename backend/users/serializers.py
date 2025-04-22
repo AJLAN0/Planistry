@@ -59,3 +59,27 @@ class UserProfileSerializer(serializers.ModelSerializer):
                   'bio', 'date_of_birth', 'institution', 'major', 'graduation_year',
                   'preferred_study_time', 'preferences')
         read_only_fields = ('id', 'email')
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(
+        required=True,
+        help_text="User's email address for password reset"
+    )
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    password = serializers.CharField(
+        required=True,
+        help_text="New password",
+        validators=[validate_password],
+        style={'input_type': 'password'}
+    )
+    password2 = serializers.CharField(
+        required=True,
+        help_text="Confirm new password",
+        style={'input_type': 'password'}
+    )
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError({"password": "Password fields didn't match."})
+        return attrs

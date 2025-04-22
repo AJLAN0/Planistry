@@ -31,11 +31,7 @@ api_v1_patterns = [
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    
-    # Redirect root to API
     path('', RedirectView.as_view(url='/api/v1/', permanent=False), name='api-root'),
-    
-    # API Endpoints
     path('api/v1/', include((api_v1_patterns, 'api'), namespace='v1')),
 ]
 
