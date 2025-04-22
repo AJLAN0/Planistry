@@ -52,6 +52,16 @@ class UserPreferences(models.Model):
         ],
         default='daily'
     )
+    intensity = models.CharField(
+        max_length=20,
+        choices=[
+            ('low', 'Low'),
+            ('medium', 'Medium'),
+            ('high', 'High'),
+        ],
+        default='low'
+    )
+    
     study_reminders_enabled = models.BooleanField(default=True)
     deadline_reminders_enabled = models.BooleanField(default=True)
     assessment_reminders_enabled = models.BooleanField(default=True)

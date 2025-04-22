@@ -22,7 +22,7 @@ from django.views.generic import RedirectView
 
 # API URL patterns
 api_v1_patterns = [
-    path('users/', include('users.urls')),
+    path('users/', include(('users.urls', 'users'), namespace='users')),
     path('academic/', include('academic.urls')),
     path('content/', include('content.urls')),
     path('study-plans/', include('study_plans.urls')),
@@ -31,8 +31,8 @@ api_v1_patterns = [
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', RedirectView.as_view(url='/api/v1/', permanent=False), name='api-root'),
-    path('api/v1/', include((api_v1_patterns, 'api'), namespace='v1')),
+    path('', RedirectView.as_view(url='/api/', permanent=False), name='api-root'),
+    path('api/', include((api_v1_patterns, 'api'), namespace='v1')),
 ]
 
 # Serve static files in development

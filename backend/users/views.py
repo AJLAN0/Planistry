@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.contrib.auth import authenticate
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -85,28 +86,58 @@ class UserLoginView(APIView):
         }
     )
     def post(self, request):
-        serializer = UserLoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = authenticate(
-            username=serializer.validated_data['email'],
-            password=serializer.validated_data['password']
-        )
-        if user:
-            refresh = RefreshToken.for_user(user)
+        try:
+            serializer = UserLoginSerializer(data=request.data)
+            if not serializer.is_valid():
+                return create_response(
+                    success=False,
+                    message="Invalid credentials",
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            
+            try:
+                user = User.objects.get(email=serializer.validated_data['email'])
+            except User.DoesNotExist:
+                return create_response(
+                    success=False,
+                    message="No active account found with the given credentials",
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+                
+            if not user.is_active:
+                return create_response(
+                    success=False,
+                    message="Account is not active. Please check your email for activation link.",
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            
+            if user.check_password(serializer.validated_data['password']):
+                refresh = RefreshToken.for_user(user)
+                return create_response(
+                    data={
+                        'token': str(refresh),
+                        'access': str(refresh.access_token),
+                        'user': UserSerializer(user).data
+                    },
+                    message="Login successful"
+                )
+            else:
+                return create_response(
+                    success=False,
+                    message="Invalid password",
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except Exception:
             return create_response(
-                data={
-                    'token': str(refresh),
-                    'access': str(refresh.access_token),
-                    'user': UserSerializer(user).data
-                },
-                message="Login successful"
+                success=False,
+                message="Invalid credentials",
+                status=status.HTTP_401_UNAUTHORIZED
             )
-        return Response(
-            {'error': 'Invalid credentials'},
-            status=status.HTTP_401_UNAUTHORIZED
-        )
 
 class UserLogoutView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    authentication_classes = [JWTAuthentication]
+    
     @swagger_auto_schema(
         operation_summary="Logout user",
         operation_description="Blacklist the refresh token to logout",
@@ -125,12 +156,33 @@ class UserLogoutView(APIView):
     )
     def post(self, request):
         try:
-            refresh_token = request.data["refresh"]
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            return Response(status=status.HTTP_205_RESET_CONTENT)
+            refresh_token = request.data.get("refresh")
+            if not refresh_token:
+                return create_response(
+                    success=False,
+                    message="Refresh token is required",
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            try:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+                return create_response(
+                    message="Successfully logged out",
+                    status=status.HTTP_205_RESET_CONTENT
+                )
+            except Exception:
+                return create_response(
+                    success=False,
+                    message="Invalid refresh token",
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return create_response(
+                success=False,
+                message="Invalid request",
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 class PasswordResetView(APIView):
     permission_classes = (permissions.AllowAny,)
@@ -258,33 +310,57 @@ class PasswordResetConfirmView(APIView):
         }
     )
     def post(self, request, uidb64, token):
-        serializer = PasswordResetConfirmSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
         try:
             # Decode the user ID
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(pk=uid)
+            try:
+                uid = force_str(urlsafe_base64_decode(uidb64))
+                user = User.objects.get(pk=uid)
+            except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+                return create_response(
+                    success=False,
+                    message="Invalid reset link",
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             
             # Verify the token
             if not PasswordResetTokenGenerator().check_token(user, token):
-                return Response(
-                    {'error': 'Invalid or expired token'},
+                return create_response(
+                    success=False,
+                    message="Invalid or expired token",
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Validate the new password
+            serializer = PasswordResetConfirmSerializer(data=request.data)
+            if not serializer.is_valid():
+                return create_response(
+                    success=False,
+                    message=serializer.errors,
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
             # Set the new password
-            user.set_password(serializer.validated_data['password'])
+            new_password = serializer.validated_data['password']
+            user.set_password(new_password)
             user.save()
+            
+            # Verify the password was set correctly
+            if not user.check_password(new_password):
+                return create_response(
+                    success=False,
+                    message="Failed to set new password",
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
             
             return create_response(
                 message="Password has been reset successfully",
                 success=True
             )
             
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            return Response(
-                {'error': 'Invalid user'},
+        except Exception as e:
+            return create_response(
+                success=False,
+                message="Invalid request",
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -292,32 +368,23 @@ class UserProfileView(generics.RetrieveAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    @swagger_auto_schema(
-        operation_summary="Get user profile",
-        operation_description="Retrieve the authenticated user's profile",
-        tags=['Profile'],
-        responses={200: UserProfileSerializer}
-    )
     def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+        serializer = self.get_serializer(self.get_object())
+        return create_response(data=serializer.data)
     
     def get_object(self):
-        # This ensures we are getting the logged-in user
         return self.request.user
 
 class UserProfileUpdateView(generics.UpdateAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = (permissions.IsAuthenticated,)
     
-    @swagger_auto_schema(
-        operation_summary="Update user profile",
-        operation_description="Update the authenticated user's profile",
-        tags=['Profile'],
-        request_body=UserProfileSerializer,
-        responses={200: UserProfileSerializer}
-    )
     def put(self, request, *args, **kwargs):
-        return super().put(request, *args, **kwargs)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return create_response(data=serializer.data,message= "Profile updated successfully")
     
     def get_object(self):
         return self.request.user
@@ -326,38 +393,27 @@ class UserPreferencesView(generics.RetrieveAPIView):
     serializer_class = UserPreferencesSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    @swagger_auto_schema(
-        operation_summary="Get user preferences",
-        operation_description="Retrieve the authenticated user's preferences",
-        tags=['Preferences'],
-        responses={200: UserPreferencesSerializer}
-    )
     def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+        serializer = self.get_serializer(self.get_object())
+        return create_response(data=serializer.data)
 
     def get_object(self):
-        # Fetch the preferences related to the authenticated user
-        return self.request.user.detailed_preferences
-
+        preferences, created = UserPreferences.objects.get_or_create(user=self.request.user)
+        return preferences
 
 class UserPreferencesUpdateView(generics.UpdateAPIView):
     serializer_class = UserPreferencesSerializer
     permission_classes = (permissions.IsAuthenticated,)
     
-    @swagger_auto_schema(
-        operation_summary="Update user preferences",
-        operation_description="Update the authenticated user's preferences",
-        tags=['Preferences'],
-        request_body=UserPreferencesSerializer,
-        responses={200: UserPreferencesSerializer}
-    )
     def put(self, request, *args, **kwargs):
-        return super().put(request, *args, **kwargs)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return create_response(data=serializer.data)
     
     def get_object(self):
-        preferences, created = UserPreferences.objects.get_or_create(
-            user=self.request.user
-        )
+        preferences, created = UserPreferences.objects.get_or_create(user=self.request.user)
         return preferences
 
 # JWT Token Views with Swagger Documentation

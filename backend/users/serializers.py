@@ -25,6 +25,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('password2')
         user = User.objects.create_user(**validated_data)
+        
+        # Create user preferences
+        UserPreferences.objects.create(user=user)
+        
         return user
 
 class UserLoginSerializer(serializers.Serializer):
@@ -45,7 +49,7 @@ class UserLoginSerializer(serializers.Serializer):
 class UserPreferencesSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserPreferences
-        fields = ('id', 'daily_study_goal', 'weekly_study_goal', 'preferred_study_duration',
+        fields = ('id', 'daily_study_goal',"intensity", 'weekly_study_goal', 'preferred_study_duration',
                   'preferred_break_duration', 'reminder_frequency', 'study_reminders_enabled',
                   'deadline_reminders_enabled', 'assessment_reminders_enabled')
         read_only_fields = ('id',)
