@@ -18,11 +18,6 @@ class SemesterListCreateView(generics.ListCreateAPIView):
     """List and create semesters for the authenticated user"""
     serializer_class = SemesterSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    renderer_classes = (
-        renderers.OpenAPIRenderer,
-        renderers.SwaggerUIRenderer,
-        renderers.JSONRenderer,
-    )
     
     def get_queryset(self):
         return Semester.objects.filter(user=self.request.user)
@@ -34,11 +29,6 @@ class SemesterDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Retrieve, update or delete a semester"""
     serializer_class = SemesterSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    renderer_classes = (
-        renderers.OpenAPIRenderer,
-        renderers.SwaggerUIRenderer,
-        renderers.JSONRenderer,
-    )
     
     def get_queryset(self):
         return Semester.objects.filter(user=self.request.user)
@@ -47,11 +37,6 @@ class CourseListCreateView(generics.ListCreateAPIView):
     """List and create courses for the authenticated user's semesters"""
     serializer_class = CourseSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    renderer_classes = (
-        renderers.OpenAPIRenderer,
-        renderers.SwaggerUIRenderer,
-        renderers.JSONRenderer,
-    )
     
     def get_queryset(self):
         return Course.objects.filter(semester__user=self.request.user)
@@ -65,11 +50,6 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Retrieve, update or delete a course"""
     serializer_class = CourseSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    renderer_classes = (
-        renderers.OpenAPIRenderer,
-        renderers.SwaggerUIRenderer,
-        renderers.JSONRenderer,
-    )
     
     def get_queryset(self):
         return Course.objects.filter(semester__user=self.request.user)
@@ -78,11 +58,6 @@ class CourseScheduleView(generics.RetrieveUpdateAPIView):
     """Retrieve or update course schedule information"""
     serializer_class = CourseSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    renderer_classes = (
-        renderers.OpenAPIRenderer,
-        renderers.SwaggerUIRenderer,
-        renderers.JSONRenderer,
-    )
     
     def get_queryset(self):
         return Course.objects.filter(semester__user=self.request.user)
@@ -91,11 +66,6 @@ class AssignmentListCreateView(generics.ListCreateAPIView):
     """List and create assignments for the authenticated user's courses"""
     serializer_class = AssignmentSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    renderer_classes = (
-        renderers.OpenAPIRenderer,
-        renderers.SwaggerUIRenderer,
-        renderers.JSONRenderer,
-    )
     
     def get_queryset(self):
         return Assignment.objects.filter(course__semester__user=self.request.user)
@@ -109,11 +79,6 @@ class AssignmentDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Retrieve, update or delete an assignment"""
     serializer_class = AssignmentSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    renderer_classes = (
-        renderers.OpenAPIRenderer,
-        renderers.SwaggerUIRenderer,
-        renderers.JSONRenderer,
-    )
     
     def get_queryset(self):
         return Assignment.objects.filter(course__semester__user=self.request.user)
@@ -121,11 +86,6 @@ class AssignmentDetailView(generics.RetrieveUpdateDestroyAPIView):
 class AssignmentSubmitView(APIView):
     """Mark an assignment as submitted"""
     permission_classes = (permissions.IsAuthenticated,)
-    renderer_classes = (
-        renderers.OpenAPIRenderer,
-        renderers.SwaggerUIRenderer,
-        renderers.JSONRenderer,
-    )
     
     def post(self, request, pk):
         assignment = get_object_or_404(Assignment, pk=pk, course__semester__user=request.user)
@@ -138,11 +98,6 @@ class CourseAssignmentListView(generics.ListAPIView):
     """List all assignments for a specific course"""
     serializer_class = AssignmentSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    renderer_classes = (
-        renderers.OpenAPIRenderer,
-        renderers.SwaggerUIRenderer,
-        renderers.JSONRenderer,
-    )
     
     def get_queryset(self):
         course_pk = self.kwargs['course_pk']
@@ -167,11 +122,6 @@ class UpcomingAssignmentsView(generics.ListAPIView):
     """List all upcoming assignments for the authenticated user"""
     serializer_class = AssignmentSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    renderer_classes = (
-        renderers.OpenAPIRenderer,
-        renderers.SwaggerUIRenderer,
-        renderers.JSONRenderer,
-    )
     
     def get_queryset(self):
         return Assignment.objects.filter(

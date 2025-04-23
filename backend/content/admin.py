@@ -3,25 +3,12 @@ from .models import CourseFile, StudyMaterial, Note, Quiz, QuizQuestion, QuizAns
 
 @admin.register(CourseFile)
 class CourseFileAdmin(admin.ModelAdmin):
-    list_display = ('title', 'course', 'file_type', 'category', 'size', 'upload_date', 'is_processed')
-    list_filter = ('category', 'file_type', 'is_processed', 'upload_date')
-    search_fields = ('title', 'description', 'course__name', 'course__code')
-    ordering = ('-upload_date',)
-    date_hierarchy = 'upload_date'
-    
-    fieldsets = (
-        (None, {
-            'fields': ('course', 'title', 'description', 'file')
-        }),
-        ('File Details', {
-            'fields': ('file_type', 'category', 'size')
-        }),
-        ('Processing', {
-            'fields': ('is_processed', 'processed_content')
-        }),
-    )
-    
-    readonly_fields = ('size', 'upload_date')
+    list_display = ('id', 'title', 'course', 'category', 'file_type', 'created_at', 'size')
+    readonly_fields = ('id', 'created_at', 'updated_at')
+    list_filter = ('course', 'category', 'file_type', 'created_at')
+    ordering = ('-created_at',)
+    date_hierarchy = 'created_at'
+
 
 @admin.register(StudyMaterial)
 class StudyMaterialAdmin(admin.ModelAdmin):

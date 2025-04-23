@@ -18,5 +18,6 @@ urlpatterns = [
     path('notes/<int:pk>/', views.NoteDetailView.as_view(), name='note_detail'),
     
     # Course Content URLs
-    path('courses/<int:course_pk>/content/', views.CourseContentListView.as_view(), name='course_content'),
+    path('courses/<int:course_pk>/content/', views.CourseContentListView.as_view(), name='course-content-list'),
+
 ] 

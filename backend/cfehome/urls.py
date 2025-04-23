@@ -24,7 +24,7 @@ from django.views.generic import RedirectView
 api_v1_patterns = [
     path('users/', include(('users.urls', 'users'), namespace='users')),
     path('academic/', include('academic.urls')),
-    path('content/', include('content.urls')),
+    path('content/', include(('content.urls', 'content'), namespace='content')),
     path('study-plans/', include('study_plans.urls')),
     path('notifications/', include('notifications.urls')),
 ]

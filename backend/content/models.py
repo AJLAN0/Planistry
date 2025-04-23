@@ -3,47 +3,38 @@ from django.utils.translation import gettext_lazy as _
 from academic.models import Course
 
 class CourseFile(models.Model):
-    """
-    Represents a file uploaded for a course (syllabus, notes, etc.).
-    """
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='files')
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    file = models.FileField(upload_to='course_files/')
-    file_type = models.CharField(max_length=50)  # e.g., 'pdf', 'docx', 'ppt'
-    size = models.PositiveIntegerField(null=True, blank=True)  # Make size optional
-    upload_date = models.DateTimeField(auto_now_add=True)
-    
-    # File categories
-    FILE_CATEGORIES = [
+    file = models.BinaryField()  # Store file directly in database
+    filename = models.CharField(max_length=255)
+    file_type = models.CharField(max_length=50)
+    size = models.PositiveIntegerField(null=True, blank=True)
+    category = models.CharField(max_length=20, choices=[
         ('syllabus', 'Syllabus'),
         ('lecture_notes', 'Lecture Notes'),
         ('assignment', 'Assignment'),
         ('reading', 'Reading Material'),
         ('other', 'Other'),
-    ]
-
-    category = models.CharField(max_length=20, choices=FILE_CATEGORIES)
-    
+    ])
     is_processed = models.BooleanField(default=False)
-    processed_content = models.TextField(blank=True)  # Extracted text content
-    
+    processed_content = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
+    updated_at = models.DateTimeField(auto_now_add=True)
+
     class Meta:
         ordering = ['-created_at']
         verbose_name = _('course file')
         verbose_name_plural = _('course files')
-        
+
     def __str__(self):
         return f"{self.title} - {self.course}"
 
-    # Add a method to calculate file size
     def save(self, *args, **kwargs):
         if self.file:
-            self.size = self.file.size
+            self.size = len(self.file)
         super().save(*args, **kwargs)
+
 
 class Quiz(models.Model):
     """
