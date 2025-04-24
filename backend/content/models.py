@@ -6,7 +6,7 @@ class CourseFile(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='files')
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    file = models.BinaryField()  # Store file directly in database
+    file = models.BinaryField()
     filename = models.CharField(max_length=255)
     file_type = models.CharField(max_length=50)
     size = models.PositiveIntegerField(null=True, blank=True)

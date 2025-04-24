@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'content',
     'study_plans',
     'notifications',
+    "Ai",
 ]
 
 MIDDLEWARE = [

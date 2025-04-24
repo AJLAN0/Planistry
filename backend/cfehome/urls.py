@@ -27,6 +27,7 @@ api_v1_patterns = [
     path('content/', include(('content.urls', 'content'), namespace='content')),
     path('study-plans/', include('study_plans.urls')),
     path('notifications/', include('notifications.urls')),
+    path('ai/', include('Ai.urls')),
 ]
 
 urlpatterns = [
