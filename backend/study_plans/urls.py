@@ -16,4 +16,8 @@ urlpatterns = [
     # Goal URLs
     path('plans/<int:plan_pk>/goals/', views.GoalListCreateView.as_view(), name='goal_list_create'),
     path('goals/<int:pk>/', views.GoalDetailView.as_view(), name='goal_detail'),
+
+    path('plans/<int:plan_pk>/tasks/', views.StudyTaskListCreateView.as_view(), name='studytask-list-create'),
+    path('tasks/<int:pk>/', views.StudyTaskDetailView.as_view(), name='studytask-detail'),
+    path('tasks/<int:task_id>/complete/', views.MarkTaskCompleteView.as_view(), name='studytask-complete'),
 ] 

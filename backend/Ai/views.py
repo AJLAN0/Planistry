@@ -13,7 +13,7 @@ from openai import OpenAI
 import os
 from django.conf import settings
 
-client = OpenAI(api_key="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", base_url="https://openrouter.ai/api/v1")
+client = OpenAI(api_key="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", base_url="https://openrouter.ai/api/v1")
 
 
 def split_text(text, max_length=5000):
@@ -94,19 +94,19 @@ class GenerateMCQsFromPDFView(APIView):
 
     def post(self, request):
         user = request.user
-        pdf_file = request.FILES.get('pdf')
-        if not pdf_file:
+        file_id = request.data.get('file_id')
+        course_file = get_object_or_404(CourseFile, id=file_id)
+        if not file_id:
             return Response({'status': 'error', 'message': 'PDF file is required'}, status=400)
 
-        fs = FileSystemStorage()
-        filename = fs.save(pdf_file.name, pdf_file)
-        file_path = fs.path(filename)
-
         try:
+            file_path = course_file.file
             text = extract_text_from_pdf(file_path)
             if not text:
                 return Response({'status': 'error', 'message': 'No extractable text found'}, status=400)
-
+            
+            if course_file.category != "lecture_notes":
+                return Response({'status': 'error', 'message': 'Must type file lecture_notes'}, status=400)
             chunks = split_text(text)
             translator = GoogleTranslator(source='auto', target='en')
             translated_chunks = [translator.translate(chunk) for chunk in chunks]
@@ -135,15 +135,17 @@ class GenerateFlashcardsFromPDFView(APIView):
 
     def post(self, request):
         user = request.user
-        pdf_file = request.FILES.get('pdf')
-        if not pdf_file:
+        file_id = request.data.get('file_id')
+        course_file = get_object_or_404(CourseFile, id=file_id)
+        if not file_id:
             return Response({'status': 'error', 'message': 'PDF file is required'}, status=400)
 
-        fs = FileSystemStorage()
-        filename = fs.save(pdf_file.name, pdf_file)
-        file_path = fs.path(filename)
+        if course_file.category != "lecture_notes":
+            return Response({'status': 'error', 'message': 'Must type file lecture_notes'}, status=400)
+        
 
         try:
+            file_path = course_file.file
             text = extract_text_from_pdf(file_path)
             if not text:
                 return Response({'status': 'error', 'message': 'No extractable text found'}, status=400)
@@ -171,6 +173,7 @@ class GenerateFlashcardsFromPDFView(APIView):
                 os.remove(file_path)
 
 class GenerateFromCourseFileView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
@@ -179,6 +182,9 @@ class GenerateFromCourseFileView(APIView):
         course_file = get_object_or_404(CourseFile, id=file_id)
         if not file_id:
             return Response({'status': 'error', 'message': 'file_id is required'}, status=400)
+    
+        if course_file.category != "syllabus":
+            return Response({'status': 'error', 'message': 'Must type file Syllabus'}, status=400)
 
         # Ensure this file belongs to the user through nested course -> semester -> user
         course = course_file.course

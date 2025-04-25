@@ -10,7 +10,7 @@ class CourseFileListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         #return CourseFile.objects.filter(course__semester__user=self.request.user)
-        return CourseFile.objects.all()
+        return CourseFile.objects.filter(course__semester__user=self.request.user)
 
 class CourseFileDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CourseFileSerializer

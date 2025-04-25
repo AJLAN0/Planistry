@@ -7,6 +7,8 @@ urlpatterns = [
     # Semester URLs
     path('semesters/', views.SemesterListCreateView.as_view(), name='semester-list'),
     path('semesters/<int:pk>/', views.SemesterDetailView.as_view(), name='semester-detail'),
+    path('semesters/<int:pk>/active/', views.SemesterActiveView.as_view(), name='semester-active'),
+    path('semesters/<int:pk>/not-active/', views.SemesterNotActiveView.as_view(), name='semester-not-active'),
     
     # Course URLs
     path('courses/', views.CourseListCreateView.as_view(), name='course-list'),

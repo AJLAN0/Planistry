@@ -4,7 +4,11 @@ from .models import Semester, Course, Assignment
 class AssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Assignment
-        fields = ['id', 'title', 'description', 'due_date', 'status', 'course', 'created_at', 'updated_at']
+        fields = [
+            'id', 'course', 'title', 'description', 'due_date',
+            'weight', 'assignment_type', 'status', 'score',
+            'created_at', 'updated_at'
+        ]
         read_only_fields = ['created_at', 'updated_at']
 
 class CourseSerializer(serializers.ModelSerializer):

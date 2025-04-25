@@ -33,6 +33,26 @@ class SemesterDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return Semester.objects.filter(user=self.request.user)
 
+class SemesterNotActiveView(APIView):
+    """Mark an assignment as submitted"""
+    permission_classes = (permissions.IsAuthenticated,)
+    
+    def post(self, request, pk):
+        semester = get_object_or_404(Semester,pk=pk,user=request.user)
+        semester.is_active = False
+        semester.save()
+        return Response({'detail': 'Semester Deactivatied'}, status=status.HTTP_200_OK)
+    
+class SemesterActiveView(APIView):
+    """Mark an assignment as submitted"""
+    permission_classes = (permissions.IsAuthenticated,)
+    
+    def post(self, request, pk):
+        semester = get_object_or_404(Semester,pk=pk,user=request.user)
+        semester.is_active = True
+        semester.save()
+        return Response({'detail': 'Semester activatied'}, status=status.HTTP_200_OK) 
+
 class CourseListCreateView(generics.ListCreateAPIView):
     """List and create courses for the authenticated user's semesters"""
     serializer_class = CourseSerializer
@@ -63,13 +83,12 @@ class CourseScheduleView(generics.RetrieveUpdateAPIView):
         return Course.objects.filter(semester__user=self.request.user)
 
 class AssignmentListCreateView(generics.ListCreateAPIView):
-    """List and create assignments for the authenticated user's courses"""
     serializer_class = AssignmentSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    
+
     def get_queryset(self):
         return Assignment.objects.filter(course__semester__user=self.request.user)
-    
+
     def perform_create(self, serializer):
         course_id = self.request.data.get('course')
         course = get_object_or_404(Course, id=course_id, semester__user=self.request.user)
@@ -89,7 +108,7 @@ class AssignmentSubmitView(APIView):
     
     def post(self, request, pk):
         assignment = get_object_or_404(Assignment, pk=pk, course__semester__user=request.user)
-        assignment.submitted = True
+        assignment.status = "submitted"
         assignment.submitted_date = timezone.now()
         assignment.save()
         return Response({'detail': 'Assignment marked as submitted'}, status=status.HTTP_200_OK)
