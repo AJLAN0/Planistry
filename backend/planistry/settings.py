@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+import dj_database_url
 from pathlib import Path
 from datetime import timedelta
 import os
@@ -33,7 +33,6 @@ ALLOWED_HOSTS = ['*']  # Configure this properly in production
 
 # Custom user model
 AUTH_USER_MODEL = 'users.User'
-
 
 # Application definition
 
@@ -102,17 +101,20 @@ WSGI_APPLICATION = 'cfehome.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'planistry',
-        'USER': 'planistryuser',
-        'PASSWORD': 'securepassword',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'planistry',
+#         'USER': 'planistryuser',
+#         'PASSWORD': 'securepassword',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
 
+DATABASES = {
+    'default': dj_database_url.config(default='sqlite:///db.sqlite3', conn_max_age=600)
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
