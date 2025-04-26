@@ -1,1 +1,2 @@
-web: python manage.py migrate && gunicorn planistry.wsgi:application
+release: python manage.py makemigrations && python manage.py migrate
+web: gunicorn planistry.wsgi:application
