@@ -24,11 +24,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop('password2')
-        user = User.objects.create_user(**validated_data)
-        
-        # Create user preferences
+        password = validated_data.pop('password')
+        user = User(**validated_data)
+        user.set_password(password)
+        user.save()
+
+    # Create user preferences
         UserPreferences.objects.create(user=user)
-        
+
         return user
 
 class UserLoginSerializer(serializers.Serializer):
