@@ -2,12 +2,27 @@ services:
   - type: web
     name: planistry
     env: python
-    buildCommand: "./manage.py migrate && pip install -r requirements.txt"
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
     startCommand: "gunicorn planistry.wsgi:application"
+    
     envVars:
+      - key: DJANGO_SECRET_KEY
+        value: "your-secret-key"
+
       - key: DATABASE_URL
         fromDatabase:
           name: planistry-db
           property: connectionString
+
       - key: DJANGO_SETTINGS_MODULE
-        value: "planistry.settings"
+        value: planistry.settings
+
+    
+    
+    
+    # Run migrations before app starts
+    preDeployCommand: "python manage.py migrate"
+
+    # Optionally collect static files
+    # postDeployCommand: "python manage.py collectstatic --noinput"
