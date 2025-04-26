@@ -76,7 +76,7 @@ class UserLoginView(APIView):
                 success=False,
                 message="Invalid input",
                 data=serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
+                status_code=status.HTTP_400_BAD_REQUEST
             )
 
         email = serializer.validated_data.get("email")
@@ -88,21 +88,21 @@ class UserLoginView(APIView):
             return create_response(
                 success=False,
                 message="No user found with this email address",
-                status=status.HTTP_401_UNAUTHORIZED
+                status_code=status.HTTP_401_UNAUTHORIZED
             )
 
         if not user.is_active:
             return create_response(
                 success=False,
                 message="Account is inactive. Please verify your email.",
-                status=status.HTTP_403_FORBIDDEN
+                status_code=status.HTTP_403_FORBIDDEN
             )
 
         if not user.check_password(password):
             return create_response(
                 success=False,
                 message="Incorrect password",
-                status=status.HTTP_401_UNAUTHORIZED
+                status_code=status.HTTP_401_UNAUTHORIZED
             )
 
         refresh = RefreshToken.for_user(user)
