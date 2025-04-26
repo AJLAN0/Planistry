@@ -1,2 +1,2 @@
+web: gunicorn planistry.wsgi --log-file -
 release: python manage.py migrate
-web: gunicorn planistry.wsgi:application
