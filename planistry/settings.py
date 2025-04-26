@@ -13,6 +13,7 @@ import dj_database_url
 from pathlib import Path
 from datetime import timedelta
 import os
+import sys
 import ssl
 import certifi
 
@@ -185,6 +186,54 @@ EMAIL_USE_SSL = False
 EMAIL_SSL_CERTFILE = certifi.where()  # Use system's certificate store
 EMAIL_SSL_KEYFILE = None
 EMAIL_TIMEOUT = 60
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',  # Change to INFO in production
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+            'formatter': 'verbose',
+        },
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'errors.log',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'DEBUG' if DEBUG else 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['console', 'file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}
+
+
 
 # Create a secure SSL context
 ssl_context = ssl.create_default_context(cafile=certifi.where())
