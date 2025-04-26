@@ -289,7 +289,7 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'exceptions.custom_exception_handler',
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
+        # 'rest_framework.renderers.BrowsableAPIRenderer',
     ],
 }
 
